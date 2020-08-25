@@ -15,7 +15,9 @@ class StatusToTwist(object):
             self._cls = Twist
         self._inputs = rospy.get_param('~inputs')
         self._scales = rospy.get_param('~scales')
-
+        self.buttonpressed = False
+        self.counter = 0
+        self.trim = 0
         self._attrs = []
         for attr in Status.__slots__:
             if attr.startswith('axis_') or attr.startswith('button_'):
@@ -48,7 +50,21 @@ class StatusToTwist(object):
                 scale = self._scales[vel_type].get(k, 1.0)
                 val = eval(expr, {}, input_vals)
                 setattr(vel_vec, k, scale * val)
-
+        if to_pub.linear.x > 0 and to_pub.angular.z == 0:
+            to_pub.angular.z = self.trim
+        if to_pub.linear.x < 0 and to_pub.angular.z == 0:
+            to_pub.angular.z = -self.trim
+        if self.buttonpressed == False:
+            if msg.button_r1 and self.trim >= -1:
+                self.trim -= 0.05
+            elif msg.button_l1 and self.trim <= 1:
+                self.trim += 0.05
+            self.buttonpressed = True
+        else:
+            counter +=1
+            if counter == 20:
+                counter = 0
+                self.buttonpressed = False
         self._pub.publish(to_pub)
 
 
