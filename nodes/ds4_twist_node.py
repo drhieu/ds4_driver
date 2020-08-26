@@ -52,18 +52,19 @@ class StatusToTwist(object):
                 setattr(vel_vec, k, scale * val)
         if to_pub.linear.x > 0 and to_pub.angular.z == 0:
             to_pub.angular.z = self.trim
-        if to_pub.linear.x < 0 and to_pub.angular.z == 0:
+        elif to_pub.linear.x < 0 and to_pub.angular.z == 0:
             to_pub.angular.z = -self.trim
-        if self.buttonpressed == False:
+        if (msg.button_l1 or msg.button_r1) and self.buttonpressed == False:
             if msg.button_r1 and self.trim >= -1:
                 self.trim -= 0.05
             elif msg.button_l1 and self.trim <= 1:
                 self.trim += 0.05
             self.buttonpressed = True
-        else:
-            counter +=1
-            if counter == 20:
-                counter = 0
+	    print("trim value %f" % self.trim)
+        elif self.buttonpressed == True:
+	    self.counter +=1
+            if self.counter == 50:
+                self.counter = 0
                 self.buttonpressed = False
         self._pub.publish(to_pub)
 
